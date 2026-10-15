@@ -12,3 +12,5 @@ npm run dev
 ```
 
 See `CLAUDE.md` for commands and conventions.
+
+Preview smoke test.
