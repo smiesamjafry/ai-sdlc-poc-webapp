@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatPrice, searchProducts } from "../lib/catalog";
+import { PLACEHOLDER_IMAGE, formatPrice, searchProducts } from "../lib/catalog";
 
 export function CatalogPage({ onAdd }: { onAdd: (productId: string) => void }) {
   const [query, setQuery] = useState("");
@@ -18,6 +18,7 @@ export function CatalogPage({ onAdd }: { onAdd: (productId: string) => void }) {
         <ul className="grid">
           {products.map((p) => (
             <li key={p.id} className="card">
+              <img src={PLACEHOLDER_IMAGE} alt={`${p.name} image`} className="card-image" width={320} height={200} />
               <h2>{p.name}</h2>
               <p className="muted">{p.category}</p>
               <p className="price">{formatPrice(p.priceCents)}</p>
