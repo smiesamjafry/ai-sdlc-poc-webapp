@@ -24,6 +24,7 @@ main { max-width: 960px; margin: 0 auto; padding: 16px; }
 
 .grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
 .card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #fff; }
+.card-image { display: block; width: 100%; height: auto; border-radius: 4px; margin-bottom: 12px; }
 .card h2 { font-size: 1.05rem; margin: 0 0 4px; }
 .muted { color: var(--muted); margin: 0; }
 .price { font-weight: 600; }
