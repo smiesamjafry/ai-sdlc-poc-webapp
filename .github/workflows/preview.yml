@@ -12,7 +12,7 @@ concurrency:
   group: preview-${{ github.event.number }}
   cancel-in-progress: true
 env:
-  PROD_API_URL: ${{ vars.PROD_API_URL || 'https://pocket-shop-api.onrender.com' }}
+  PROD_API_URL: ${{ vars.PROD_API_URL || 'https://pocket-shop-api-c15t.onrender.com' }}
 jobs:
   build:
     if: github.event.action != 'closed'
@@ -38,7 +38,7 @@ jobs:
           backend=$(git diff --name-only "$BASE"...HEAD | grep -E '^(server/|shared/|render\.yaml$|package(-lock)?\.json$)' || true)
           api="$PROD_API_URL"
           if [[ "$TITLE" == *"[render preview]"* ]]; then
-            candidate="https://pocket-shop-api-pr-$NUMBER.onrender.com"
+            candidate="https://pocket-shop-api-c15t-pr-$NUMBER.onrender.com"
             echo "Waiting for the Render preview API at $candidate"
             for i in $(seq 1 60); do
               if curl -sf "$candidate/healthz" > /dev/null; then api="$candidate"; break; fi

@@ -9,7 +9,7 @@ concurrency:
   group: pages
   cancel-in-progress: false
 env:
-  STOREFRONT_URL: ${{ vars.STOREFRONT_URL || 'https://pocket-shop.onrender.com' }}
+  STOREFRONT_URL: ${{ vars.STOREFRONT_URL || 'https://pocket-shop-41pq.onrender.com' }}
 jobs:
   deploy:
     runs-on: ubuntu-latest

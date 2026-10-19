@@ -3,8 +3,8 @@
 A small but complete e-commerce store (storefront + admin) used as the target repository for the
 [ASDLC](https://github.com/smiesamjafry/ai-sdlc) Slack-to-PR proof of concept.
 
-- **Storefront:** see the Render static site `pocket-shop` (URL in the Render dashboard and in `docs/demo-runbook.md`)
-- **API:** Render web service `pocket-shop-api` (`/healthz`)
+- **Storefront:** https://pocket-shop-41pq.onrender.com (admin at `#/admin`)
+- **API:** https://pocket-shop-api-c15t.onrender.com (`/healthz`)
 - **PR previews:** `https://smiesamjafry.github.io/ai-sdlc-poc-webapp/pr-preview/pr-<N>/` (browse-only). Add `[render preview]` to a PR title for a full preview with its own API and database.
 
 ## Quickstart (about 3 minutes with Docker running)

@@ -1,6 +1,6 @@
 # Demo runbook
 
-**Storefront:** the `pocket-shop` Render static site (`https://pocket-shop-<id>.onrender.com`, see the Render dashboard)
+**Storefront:** https://pocket-shop-41pq.onrender.com · **API:** https://pocket-shop-api-c15t.onrender.com/healthz
 **Admin:** storefront URL + `#/admin` (admin and staff passwords are in Render → `pocket-shop-api` → Environment)
 **Customer login:** `demo@shop.test` / `demo1234` · **Cards:** `4242 4242 4242 4242` paid, `4000 0000 0000 0002` declined
 
