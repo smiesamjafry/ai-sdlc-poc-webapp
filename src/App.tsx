@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { HashRouter, Link, Navigate, Route, Routes } from "react-router-dom";
-import { addToCart, itemCount, loadCart, saveCart, setQuantity, type CartLine } from "./lib/cart";
+import { addToCart, itemCount, loadCart, removeFromCart, saveCart, setQuantity, type CartLine } from "./lib/cart";
 import { currentUser, logout } from "./lib/auth";
 import { CatalogPage } from "./pages/CatalogPage";
 import { CartPage } from "./pages/CartPage";
@@ -42,7 +42,13 @@ export function App() {
           <Route path="/" element={<CatalogPage onAdd={(id) => setCart((c) => addToCart(c, id))} />} />
           <Route
             path="/cart"
-            element={<CartPage lines={cart} onQuantity={(id, q) => setCart((c) => setQuantity(c, id, q))} />}
+            element={
+              <CartPage
+                lines={cart}
+                onQuantity={(id, q) => setCart((c) => setQuantity(c, id, q))}
+                onRemove={(id) => setCart((c) => removeFromCart(c, id))}
+              />
+            }
           />
           <Route
             path="/checkout"

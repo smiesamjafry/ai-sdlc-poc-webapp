@@ -5,15 +5,20 @@ import { cartTotalCents, productFor, type CartLine } from "../lib/cart";
 export function CartPage({
   lines,
   onQuantity,
+  onRemove,
 }: {
   lines: CartLine[];
   onQuantity: (productId: string, quantity: number) => void;
+  onRemove: (productId: string) => void;
 }) {
   if (lines.length === 0) {
     return (
       <section>
         <h1>Your cart</h1>
         <p>Your cart is empty.</p>
+        <p className="total">
+          Total: <strong data-testid="cart-total">{formatPrice(0)}</strong>
+        </p>
         <Link to="/">Browse products</Link>
       </section>
     );
@@ -28,6 +33,7 @@ export function CartPage({
             <th>Item</th>
             <th>Price</th>
             <th>Qty</th>
+            <th />
           </tr>
         </thead>
         <tbody>
@@ -46,6 +52,15 @@ export function CartPage({
                     aria-label={`Quantity of ${product.name}`}
                     onChange={(e) => onQuantity(line.productId, Number(e.target.value))}
                   />
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="link"
+                    onClick={() => onRemove(line.productId)}
+                  >
+                    Remove
+                  </button>
                 </td>
               </tr>
             );

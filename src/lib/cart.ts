@@ -32,12 +32,16 @@ export function setQuantity(lines: CartLine[], productId: string, quantity: numb
   return lines.map((l) => (l.productId === productId ? { ...l, quantity: Math.max(1, quantity) } : l));
 }
 
+export function removeFromCart(lines: CartLine[], productId: string): CartLine[] {
+  return lines.filter((l) => l.productId !== productId);
+}
+
 export function productFor(line: CartLine): Product | undefined {
   return PRODUCTS.find((p) => p.id === line.productId);
 }
 
 export function cartTotalCents(lines: CartLine[]): number {
-  return lines.reduce((sum, line) => sum + (productFor(line)?.priceCents ?? 0), 0);
+  return lines.reduce((sum, line) => sum + (productFor(line)?.priceCents ?? 0) * line.quantity, 0);
 }
 
 export function itemCount(lines: CartLine[]): number {
