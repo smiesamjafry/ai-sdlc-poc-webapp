@@ -50,7 +50,8 @@ main { max-width: 960px; margin: 0 auto; padding: 16px; }
 .grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
 .card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--surface); }
 .card .price { margin: 12px 0 14px; }
-.card button { margin-top: auto; width: 100%; }
+.card-actions { margin-top: auto; display: grid; gap: 8px; }
+.card button { width: 100%; }
 .card-image { display: block; width: 100%; height: auto; border-radius: 4px; margin-bottom: 12px; }
 .card h2 { font-size: 1.05rem; margin: 0 0 4px; }
 .muted { color: var(--muted); margin: 0; }
@@ -106,6 +107,22 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 ::selection { background: var(--ring); }
 button.link { background: none; color: var(--accent); padding: 0; }
+button.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--border-strong); }
+button.secondary:hover { background: var(--bg); }
+
+/* Product preview: a native modal dialog, full width on phones. */
+.preview { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 32px); border: 0; border-radius: 12px; padding: 20px; background: var(--surface); color: var(--fg); box-sizing: border-box; }
+.preview::backdrop { background: rgb(0 0 0 / 0.4); }
+.preview-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.preview-head h2 { margin: 0; font-size: 1.3rem; }
+.preview .price { font-size: 1.15rem; font-weight: 700; margin: 12px 0 4px; }
+.carousel { margin-top: 12px; }
+.carousel-image { display: block; width: 100%; height: auto; border-radius: 6px; }
+.carousel-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; color: var(--muted); }
+.similar h3 { font-size: 1rem; margin: 20px 0 8px; }
+.similar ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.similar-item { width: 100%; display: flex; justify-content: space-between; background: var(--surface); color: var(--fg); border: 1px solid var(--border); }
+.similar-item:hover { background: var(--bg); }
 
 .cart {
   border-collapse: separate;
