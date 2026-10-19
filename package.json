@@ -3,14 +3,22 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Sample shop used as the target repo for the ASDLC Slack-to-PR POC",
+  "description": "Pocket Shop: storefront + admin (React) with an Express/Postgres/Redis API; target repo for the ASDLC Slack-to-PR POC",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite",
+    "dev:api": "npm run dev -w server",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
     "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit -p tsconfig.json && npm run typecheck -w server",
     "test": "vitest run",
+    "test:api": "npm run test -w server",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "verify": "npm run typecheck && npm test && npm run test:api && npm run test:e2e",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:seed": "npm run db:seed -w server",
+    "db:reset": "npm run db:reset -w server --"
   },
   "dependencies": {
     "react": "^19.3.1",
@@ -27,5 +35,9 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.7",
     "vitest": "^3.2.7"
-  }
+  },
+  "workspaces": [
+    "server",
+    "shared"
+  ]
 }
