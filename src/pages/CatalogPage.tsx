@@ -8,6 +8,7 @@ export function CatalogPage({ onAdd }: { onAdd: (productId: string) => void }) {
   return (
     <section>
       <h1>Products</h1>
+      <p className="lede">Bags, bottles and notebooks for every day.</p>
       <label className="field">
         Search
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. bottle" />

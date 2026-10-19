@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { HashRouter, Link, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { addToCart, itemCount, loadCart, saveCart, setQuantity, type CartLine } from "./lib/cart";
 import { currentUser, logout } from "./lib/auth";
 import { CatalogPage } from "./pages/CatalogPage";
@@ -20,7 +20,7 @@ export function App() {
           Pocket Shop
         </Link>
         <nav>
-          <Link to="/cart">Cart ({itemCount(cart)})</Link>
+          <NavLink to="/cart">Cart ({itemCount(cart)})</NavLink>
           {user ? (
             <button
               type="button"
@@ -33,7 +33,7 @@ export function App() {
               Sign out
             </button>
           ) : (
-            <Link to="/login">Sign in</Link>
+            <NavLink to="/login">Sign in</NavLink>
           )}
         </nav>
       </header>
