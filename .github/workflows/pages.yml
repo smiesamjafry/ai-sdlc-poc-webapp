@@ -1,4 +1,6 @@
-name: Deploy to GitHub Pages
+name: GitHub Pages root
+# Production runs on Render. GitHub Pages only hosts PR previews (pr-preview/), plus a root
+# page that sends visitors to the live storefront.
 on:
   push:
     branches: [main]
@@ -6,37 +8,28 @@ on:
 concurrency:
   group: pages
   cancel-in-progress: false
+env:
+  STOREFRONT_URL: ${{ vars.STOREFRONT_URL || 'https://pocket-shop.onrender.com' }}
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: site
-          path: dist
-          retention-days: 1
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: site
-          path: dist
+      - name: Write redirect page
+        run: |
+          mkdir -p site
+          cat > site/index.html <<HTML
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>Pocket Shop</title>
+          <meta http-equiv="refresh" content="0; url=$STOREFRONT_URL">
+          <p>The store lives at <a href="$STOREFRONT_URL">$STOREFRONT_URL</a>. PR previews are under <code>pr-preview/</code>.</p>
+          HTML
+          touch site/.nojekyll
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist
+          folder: site
           branch: gh-pages
           clean-exclude: pr-preview/
