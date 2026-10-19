@@ -102,8 +102,6 @@ button:active, .button:active { background: var(--accent-deep); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 ::selection { background: var(--ring); }
-.card { transition: border-color 120ms ease-out; }
-.card:hover { border-color: var(--border-strong); }
 button.link { background: none; color: var(--accent); padding: 0; }
 
 .cart {
