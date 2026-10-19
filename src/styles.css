@@ -4,6 +4,9 @@
   --muted: #6b6b66;
   --accent: #2f5d50;
   --border: #e3e2dc;
+  --border-strong: #cdcbc2;
+  --surface: #fff;
+  --ring: rgb(47 93 80 / 0.28);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--fg);
   background: var(--bg);
@@ -34,7 +37,23 @@ main { max-width: 960px; margin: 0 auto; padding: 16px; }
 .muted { color: var(--muted); margin: 0; }
 .price { font-weight: 600; }
 
-.field { display: flex; flex-direction: column; gap: 4px; margin: 12px 0; max-width: 360px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; max-width: 360px; font-size: 0.95rem; font-weight: 500; }
+
+input, textarea {
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+textarea { resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
 .stack { display: flex; flex-direction: column; }
 
 button, .button {
@@ -53,7 +72,7 @@ button.link { background: none; color: var(--accent); padding: 0; }
 
 .cart { border-collapse: collapse; width: 100%; }
 .cart th, .cart td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
-.cart input { width: 64px; }
+.cart input { width: 76px; }
 .total { font-size: 1.1rem; }
 
 [role="alert"] { color: #a1260d; }
