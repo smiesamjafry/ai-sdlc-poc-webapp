@@ -53,6 +53,7 @@ main { max-width: 960px; margin: 0 auto; padding: 16px; }
 .card-image { display: block; width: 100%; height: auto; border-radius: 4px; margin-bottom: 12px; }
 .card h2 { font-size: 1.05rem; margin: 0 0 4px; }
 .muted { color: var(--muted); margin: 0; }
+.lede { color: var(--muted); font-size: 1.1rem; margin: -8px 0 8px; }
 .price { font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; max-width: 360px; font-size: 0.95rem; font-weight: 500; }
