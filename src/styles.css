@@ -67,7 +67,19 @@ input, textarea {
 textarea { resize: vertical; }
 input::placeholder, textarea::placeholder { color: var(--muted); }
 input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
-.stack { display: flex; flex-direction: column; }
+/* A form panel: fields and its button share one width. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  box-sizing: border-box;
+  padding: 8px 24px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.stack .field { max-width: none; }
+.stack button { margin-top: 12px; }
 
 button, .button {
   background: var(--accent);
