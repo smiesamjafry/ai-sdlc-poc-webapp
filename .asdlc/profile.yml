@@ -29,5 +29,6 @@ checks:
 agentCommands: [npm test, npm run typecheck, npm run test:api, npm run build, npm run test:e2e, npm run db:migrate, npm run db:seed, "npx vitest", "npx tsc"]
 protectedPaths: [.github/, .asdlc/, e2e/asdlc/, render.yaml, playwright.config.ts, vite.config.ts, tsconfig.json, server/tsconfig.json, package.json, package-lock.json, docker-compose.yml, scripts/]
 migrations: server/migrations/
-preview: { url: "https://smiesamjafry.github.io/ai-sdlc-poc-webapp/pr-preview/pr-{pr}/" }
+# The preview is the PR's storefront against the live API: it can't show server/ changes.
+preview: { url: "https://smiesamjafry.github.io/ai-sdlc-poc-webapp/pr-preview/pr-{pr}/", backend: [server/] }
 ci: { requiredChecks: [test] }
