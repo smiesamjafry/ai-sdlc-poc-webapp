@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiProblem } from "../lib/api";
-import { IS_PREVIEW } from "../lib/env";
 import { useApi } from "../lib/store";
 import type { ProductQuestion } from "../lib/types";
 
@@ -51,14 +50,12 @@ export function ProductQuestions({ slug }: { slug: string }) {
           ))}
         </ul>
       )}
-      {!IS_PREVIEW && (
-        <form onSubmit={submit}>
-          <label className="field">Your question
-            <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={500} rows={3} />
-          </label>
-          <button type="submit" disabled={busy}>Ask a question</button>
-        </form>
-      )}
+      <form onSubmit={submit}>
+        <label className="field">Your question
+          <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={500} rows={3} />
+        </label>
+        <button type="submit" disabled={busy}>Ask a question</button>
+      </form>
       {msg && <p role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
     </section>
   );
