@@ -1,0 +1,33 @@
+version: 1
+app:
+  description: Pocket Shop is a demo e-commerce store (React storefront and admin, Express API, Postgres, Redis). Payments are mocked and no real email is sent.
+env:
+  APP_ENV: development
+  DATABASE_URL: postgres://pocket:pocket@localhost:5432/pocket
+  E2E_DATABASE_URL: postgres://pocket:pocket@localhost:5432/pocket_e2e
+  REDIS_URL: redis://localhost:6379
+  VITE_API_URL: http://localhost:4000
+  CORS_ORIGINS: http://localhost:5173,http://localhost:4173
+  SEED_SCALE: small
+setup:
+  - npm ci
+  - npx playwright install --with-deps chromium
+services:
+  - { name: postgres, image: "postgres:16-alpine", port: 5432, env: { POSTGRES_USER: pocket, POSTGRES_PASSWORD: pocket, POSTGRES_DB: pocket }, health: "pg_isready -U pocket -d pocket" }
+  - { name: redis, image: "redis:7-alpine", port: 6379, health: "redis-cli ping" }
+prepare:
+  - npm run db:seed
+start: { command: node scripts/dev.mjs, url: "http://localhost:5173/", ready: "http://localhost:4000/healthz", timeoutSeconds: 180 }
+api: { baseUrl: "http://localhost:4000/api/v1/" }
+reset: npm run db:reset -- --yes
+checks:
+  - { name: typecheck, run: npm run typecheck }
+  - { name: unit tests, run: npm test }
+  - { name: api tests, run: npm run test:api }
+  - { name: build, run: npm run build }
+  - { name: e2e tests, run: npm run test:e2e }
+agentCommands: [npm test, npm run typecheck, npm run test:api, npm run build, npm run test:e2e, npm run db:migrate, npm run db:seed, "npx vitest", "npx tsc"]
+protectedPaths: [.github/, .asdlc/, e2e/asdlc/, render.yaml, playwright.config.ts, vite.config.ts, tsconfig.json, server/tsconfig.json, package.json, package-lock.json, docker-compose.yml, scripts/]
+migrations: server/migrations/
+preview: none
+ci: { requiredChecks: [test] }
