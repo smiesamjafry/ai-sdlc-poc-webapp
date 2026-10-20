@@ -39,6 +39,8 @@ export function ProductQuestions({ slug }: { slug: string }) {
   return (
     <section className="qa" aria-labelledby="qa-heading">
       <h2 id="qa-heading">Questions &amp; Answers</h2>
+      {/* Only answered questions reach visitors, so the count is the answered ones. */}
+      {data && <h3>Questions ({data.items.length})</h3>}
       {data && data.items.length === 0 && <p className="muted">No answered questions yet.</p>}
       {data && data.items.length > 0 && (
         <ul className="plain qa-list">
