@@ -5,17 +5,21 @@ name: PR preview
 # The preview SPA talks to the production API, which allows GitHub Pages only anonymous
 # GET (browse the catalog; sign-in and checkout are blocked). A PR whose title contains
 # [render preview] gets a Render preview environment instead, and this preview points at it.
+#
+# `edited` is here only for title changes ([render preview]). ASDLC opens a PR and then edits its
+# description to add the preview link; that edit must not cancel the "opened" deploy, so
+# description-only edits get their own concurrency group and build nothing.
 on:
   pull_request:
     types: [opened, reopened, synchronize, edited, closed]
 concurrency:
-  group: preview-${{ github.event.number }}
+  group: preview-${{ github.event.number }}-${{ github.event.action == 'edited' && !github.event.changes.title && 'description' || 'deploy' }}
   cancel-in-progress: true
 env:
   PROD_API_URL: ${{ vars.PROD_API_URL || 'https://pocket-shop-api.onrender.com' }}
 jobs:
   build:
-    if: github.event.action != 'closed'
+    if: github.event.action != 'closed' && (github.event.action != 'edited' || github.event.changes.title)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -82,3 +86,5 @@ jobs:
           source-dir: dist
           preview-branch: gh-pages
           umbrella-dir: pr-preview
+          # Explicit: the action's "auto" mode ignores `edited`, so a title change would deploy nothing.
+          action: ${{ github.event.action == 'closed' && 'remove' || 'deploy' }}
