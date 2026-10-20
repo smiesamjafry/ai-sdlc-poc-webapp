@@ -1,4 +1,4 @@
-<!-- asdlc-context: describes 5295b5a554b1d8be635a691ed2d92eb330688323 (written 2026-10-20). Edit freely; ASDLC refreshes changed sections after merges. -->
+<!-- asdlc-context: describes 055e8c3b9df91bda9c92217c095d006f53924d95 (written 2026-10-20). Edit freely; ASDLC refreshes changed sections after merges. -->
 
 # Pocket Shop: product overview
 
@@ -9,13 +9,13 @@ Pocket Shop is a demo online store selling apparel and accessories, with a custo
 - **Guest shopper**: browses, fills a cart and checks out with just an email. Can view their order with a link/token given at checkout.
 - **Customer**: has an account (register/sign in), order history, saved addresses. Their guest cart merges into their account on sign-in.
 - **Staff**: admin area access for day-to-day work: view data, move orders through fulfilment, cancel orders, adjust stock. Cannot change settings, promotions, products, categories, customers or refund.
-- **Admin**: everything staff can do plus products, categories, promotions, settings, refunds, disabling customers, cache flush, demo reset, audit log.
+- **Admin**: everything staff can do plus products, categories, promotions, settings, refunds, disabling customers, answering product questions, cache flush, demo reset, audit log.
 - **Demo presenter**: uses the admin "System" page to see cache behaviour and reset the demo data.
 
 ## Storefront pages (hash routes, e.g. `/#/products`)
 - `/` home: featured categories, featured products, new arrivals, on-sale items
 - `/products` catalog with filters (category, size, colour, price, in stock, on sale), sorting and search
-- `/products/:slug` product page with colour/size choice and "Add to cart"
+- `/products/:slug` product page with colour/size choice, "Add to cart" and a Questions & Answers section
 - `/cart` cart with quantity changes, coupon code and totals
 - `/checkout` email, shipping address and card
 - `/orders/:number` order confirmation and status
@@ -26,11 +26,12 @@ Pocket Shop is a demo online store selling apparel and accessories, with a custo
 - `/admin/products`, `/admin/products/:id` product list and editor (variants, images, status)
 - `/admin/categories`, `/admin/inventory`, `/admin/orders`, `/admin/orders/:number`
 - `/admin/promotions`, `/admin/customers`, `/admin/settings`
+- `/admin/questions` (admin only) unanswered product questions, answered here
 - `/admin/outbox` emails the store would have sent
 - `/admin/system` health, cache stats, flush cache, reset demo data
 
 ## API (base `/api/v1`, details in docs/api.md)
-Public catalog: `GET /products`, `/products/:slug`, `/categories`, `/home`, `/store`. Account: `/auth/register|login|refresh|logout`, `/me`, `/me/addresses`, `/orders`. Cart: `/cart`, `/cart/items`, `/cart/coupon`, `/cart/merge`. `POST /checkout`. Admin under `/admin/...`. Health: `GET /healthz`.
+Public catalog: `GET /products`, `/products/:slug`, `/products/:slug/questions` (GET, POST), `/categories`, `/home`, `/store`. Account: `/auth/register|login|refresh|logout`, `/me`, `/me/addresses`, `/orders`. Cart: `/cart`, `/cart/items`, `/cart/coupon`, `/cart/merge`. `POST /checkout`. Admin under `/admin/...`. Health: `GET /healthz`.
 
 ## Key flows
 1. **Buy as a guest**: browse → open a product → choose colour/size → Add to cart → cart → (optional coupon) → checkout with email, address, card → order confirmation with an order number.
@@ -41,6 +42,7 @@ Public catalog: `GET /products`, `/products/:slug`, `/categories`, `/home`, `/st
 6. **Adjust stock**: Inventory → adjust by a positive or negative amount with a reason; stock never goes below 0; movements are logged.
 7. **Promotions** (admin): create a code (percentage, fixed amount, or free shipping) with scope (all, categories, products), minimum spend, dates and usage limits.
 8. **Reset demo**: System → Reset demo data (type RESET) reseeds everything and signs everyone out.
+9. **Answer a product question** (admin): Questions → type an answer → Save answer; the question and answer appear on the product page straight away.
 
 ## Business rules and limits
 - Money is whole cents, USD, English only.
@@ -52,9 +54,10 @@ Public catalog: `GET /products`, `/products/:slug`, `/categories`, `/home`, `/st
 - Order flow: paid → packed → shipped → delivered; cancelled only from paid or packed.
 - Deleting a product archives it. A category with products cannot be deleted.
 - Disabling a customer ends their sessions.
+- Product questions: anyone can ask (1-500 characters, no sign-in). Only answered questions are shown; each question takes one answer.
 - Emails are not sent; they are stored in an outbox viewable by admins.
 - Login and catalog requests are rate limited per IP.
-- GitHub Pages PR previews are browse-only (no sign-in, cart or checkout).
+- GitHub Pages PR previews are browse-only (no sign-in, cart, checkout or questions).
 - No real payments, shipping carriers, tax engine, multi-currency or multi-language. A wishlist appears in the PRD but is not in the app routes (unknown whether planned).
 - Fixture accounts exist only in local, CI and preview environments: admin@shop.test, staff@shop.test, demo@shop.test.
 
