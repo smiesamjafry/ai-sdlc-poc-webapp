@@ -1,6 +1,6 @@
 # Demo runbook
 
-**Storefront:** the `pocket-shop` Render static site (`https://pocket-shop-<id>.onrender.com`, see the Render dashboard)
+**Storefront:** https://pocket-shop-41pq.onrender.com · **API:** https://pocket-shop-api-c15t.onrender.com/healthz
 **Admin:** storefront URL + `#/admin` (admin and staff passwords are in Render → `pocket-shop-api` → Environment)
 **Customer login:** `demo@shop.test` / `demo1234` · **Cards:** `4242 4242 4242 4242` paid, `4000 0000 0000 0002` declined
 
@@ -26,5 +26,5 @@ Storefront → add an item → Checkout → decline card first (clear message, c
 Admin → Orders → the new order → **Mark packed** → **Mark shipped** (tracking number) → Outbox shows the confirmation email.
 
 ## Previews of Slack-generated PRs
-- Every PR gets a browse-only preview at `https://smiesamjafry.github.io/ai-sdlc-poc-webapp/pr-preview/pr-<N>/` (anonymous reads from the live API).
-- PRs that change `server/`, `shared/`, migrations or dependencies must have `[render preview]` in the title. Render then builds a full preview (own API, database and cache, fixture logins, expires after 3 days) and the Pages preview points at it. Without the tag the preview check fails and says so.
+- Add `[render preview]` to a PR title and Render builds a full preview (own storefront, API, database and cache, fixture logins, expires after 3 days). This needs the `render.yaml` Blueprint attached in the Render dashboard.
+- Without the tag there is no preview; review the PR's CI run instead.

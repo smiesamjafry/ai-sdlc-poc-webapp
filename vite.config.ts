@@ -1,8 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Relative base + HashRouter lets the same build run at the Pages root
-// and under /pr-preview/pr-N/ for pull request previews.
+// Relative base + HashRouter lets the same build run from any static host path.
 export default defineConfig({
   base: "./",
   // Build commit for the "store is updating" banner (Render sets RENDER_GIT_COMMIT).

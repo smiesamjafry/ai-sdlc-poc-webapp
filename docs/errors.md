@@ -22,7 +22,7 @@ Every API error is `application/problem+json`:
 | <a id="account_disabled"></a>`ACCOUNT_DISABLED` | 401 | Customer disabled by an admin | Ask an admin |
 | <a id="invalid_credentials"></a>`INVALID_CREDENTIALS` | 401 | Wrong email or password | Check and retry |
 | <a id="forbidden_role"></a>`FORBIDDEN_ROLE` | 403 | Role not allowed (e.g. staff calling an admin-only route) | Ask an admin |
-| <a id="preview_read_only"></a>`PREVIEW_READ_ONLY` | 403 | A GitHub Pages preview tried to sign in or write | Use the storefront or a `[render preview]` environment |
+| <a id="preview_read_only"></a>`PREVIEW_READ_ONLY` | 403 | A read-only preview origin tried to sign in or write | Use the storefront or a `[render preview]` environment |
 | <a id="email_taken"></a>`EMAIL_TAKEN` | 409 | Account already exists | Sign in |
 | <a id="insufficient_stock"></a>`INSUFFICIENT_STOCK` | 409 | Not enough stock; `available` and `items` say how much | Lower the quantity |
 | <a id="coupon_invalid"></a>`COUPON_INVALID` | 422 | Code unknown, expired, not started, used up or minimum not met (`detail` says which) | Remove or change the code |
