@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ApiProblem } from "../lib/api";
 import { IS_PREVIEW } from "../lib/env";
 import { useApi, useStore } from "../lib/store";
+import { avatarSrc, mockReviews } from "../lib/reviews";
 import type { Product } from "../lib/types";
 import { ErrorNote, Loading, Price, imgSrc } from "../components/ui";
 
@@ -79,6 +80,31 @@ export function ProductDetailPage() {
         )}
         {msg && <p role={msg.ok ? "status" : "alert"}>{msg.text} {msg.ok && <Link to="/cart">View cart</Link>}</p>}
       </div>
+      <Reviews slug={p.slug} />
+    </section>
+  );
+}
+
+function Reviews({ slug }: { slug: string }) {
+  const reviews = useMemo(() => mockReviews(slug), [slug]);
+  return (
+    <section className="reviews" aria-labelledby="reviews-heading">
+      <h2 id="reviews-heading">Reviews</h2>
+      <ul>
+        {reviews.map((r) => (
+          <li key={r.name} className="review">
+            <img src={avatarSrc(r)} alt={`Profile picture of ${r.name}`} width={48} height={48} />
+            <div>
+              <p className="review-name">{r.name}</p>
+              <p className="stars">
+                <span aria-hidden="true">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>{" "}
+                <span className="muted">{r.rating} out of 5 stars</span>
+              </p>
+              <p>{r.comment}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

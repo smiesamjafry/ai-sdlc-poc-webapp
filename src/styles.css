@@ -176,6 +176,13 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .notice.error .link { margin-left: 8px; }
 .field-error { color: #a1260d; font-size: 0.85rem; font-weight: 400; }
 .pdp { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: start; }
+.reviews { grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 8px; }
+.reviews ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.review { display: flex; gap: 12px; align-items: flex-start; }
+.review img { border-radius: 50%; flex: none; }
+.review p { margin: 0 0 4px; }
+.review-name { font-weight: 600; }
+.stars span[aria-hidden] { color: #b7791f; letter-spacing: 1px; }
 .gallery img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); }
 .options { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 .options legend { font-weight: 500; margin-bottom: 6px; }
