@@ -1,0 +1,190 @@
+# ASDLC codebase context run. Copy to .github/workflows/asdlc-context.yml in the target repo, on
+# its default branch, next to asdlc-run.yml. Started only by the ASDLC orchestrator when someone
+# says `@asdlc refresh context` or after merges to the default branch. It writes nothing to the
+# repo: the orchestrator turns the report into a PR of .asdlc/ files that a person merges.
+#
+#   agent   claims the run with OIDC, scans the repo (no AI), then one read-only Claude Code
+#           survey writes the draft .asdlc/ files. Anthropic only through the ASDLC metering
+#           proxy with a per-run token and a fixed budget.
+#   verify  no credentials of any kind. Secret scan of the drafted files, then a dry run of the
+#           drafted profile: setup, services, prepare, app start, checks.
+#   report  OIDC only, runs no agent code: posts the drafted files and the verify results.
+name: asdlc-context
+run-name: "asdlc context ${{ inputs.run }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      run: { description: "ASDLC context run id", required: true, type: string }
+      server: { description: "ASDLC orchestrator base URL", required: true, type: string }
+
+permissions: {}
+
+concurrency:
+  group: asdlc-context
+  cancel-in-progress: false
+
+env:
+  RUN: ${{ inputs.run }}
+  SERVER: ${{ inputs.server }}
+  CLAUDE_CODE_VERSION: 2.1.286
+  WRITE_HARNESS: |
+    const fs = require("fs"), path = require("path");
+    const h = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    for (const [f, text] of Object.entries(h.files)) {
+      if (!/^harness\/[\w./-]+$/.test(f) || f.includes("..")) throw new Error("bad harness path " + f);
+      const out = path.join(".asdlc-harness", f);
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      fs.writeFileSync(out, text);
+    }
+    console.log("harness", h.ref, Object.keys(h.files).join(", "));
+
+jobs:
+  agent:
+    name: agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      start_sha: ${{ steps.claim.outputs.start_sha }}
+    steps:
+      - name: Validate inputs
+        run: |
+          [[ "$RUN" =~ ^C-[0-9a-f-]{36}$ ]] || { echo "bad run id"; exit 1; }
+          [[ "$SERVER" =~ ^https:// ]] || { echo "server must be https"; exit 1; }
+
+      - name: Claim run
+        id: claim
+        run: |
+          set -euo pipefail
+          OIDC=$(curl -sSf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=asdlc" | jq -r .value)
+          curl -sS --fail-with-body -X POST "$SERVER/github/context/claim" \
+            -H "Authorization: Bearer $OIDC" -H 'content-type: application/json' \
+            -d "{\"run\":\"$RUN\"}" -o "$RUNNER_TEMP/claim.json"
+          TOKEN=$(jq -r .token "$RUNNER_TEMP/claim.json")
+          echo "::add-mask::$TOKEN"
+          printf '%s' "$TOKEN" > "$RUNNER_TEMP/proxy-token"
+          jq .harness "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/harness.json"
+          jq -r .agent.prompt "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/prompt.md"
+          jq -r .agent.model "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/model"
+          jq -r .agent.maxTurns "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/max-turns"
+          jq -r .agent.allowedTools "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/allowed-tools"
+          echo "start_sha=$(jq -r .startSha "$RUNNER_TEMP/claim.json")" >> "$GITHUB_OUTPUT"
+          rm "$RUNNER_TEMP/claim.json"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.claim.outputs.start_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install harness and scan
+        run: |
+          node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json"
+          node .asdlc-harness/harness/run.mjs scan
+
+      - name: Survey with Claude Code (read-only, writes .asdlc/ only)
+        run: |
+          set -uo pipefail
+          mkdir -p .asdlc "$RUNNER_TEMP/out"
+          KEY=$(cat "$RUNNER_TEMP/proxy-token"); rm "$RUNNER_TEMP/proxy-token"
+          env -u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL \
+              -u ACTIONS_RUNTIME_TOKEN -u ACTIONS_RESULTS_URL -u ACTIONS_CACHE_URL -u GITHUB_TOKEN \
+            ANTHROPIC_BASE_URL="$SERVER/llm" ANTHROPIC_API_KEY="$KEY" \
+            ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-5-5 ANTHROPIC_SMALL_FAST_MODEL=claude-haiku-5-5 \
+            CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 \
+            npx -y "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" -p "$(cat "$RUNNER_TEMP/prompt.md")" \
+              --model "$(cat "$RUNNER_TEMP/model")" --max-turns "$(cat "$RUNNER_TEMP/max-turns")" \
+              --allowedTools "$(cat "$RUNNER_TEMP/allowed-tools")" --output-format json \
+              > "$RUNNER_TEMP/claude.json" || echo "::warning::Claude Code exited with $?"
+          unset KEY
+          jq -r '.result // ""' "$RUNNER_TEMP/claude.json" > .asdlc/summary.md || true
+          jq '{subtype, num_turns, duration_ms, is_error}' "$RUNNER_TEMP/claude.json" || true
+          ls -la .asdlc .asdlc/modules 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-draft
+          path: .asdlc/
+          retention-days: 14
+
+  verify:
+    name: verify
+    needs: agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.agent.outputs.start_sha }}
+          persist-credentials: false
+
+      - name: Fetch trusted harness
+        run: |
+          set -euo pipefail
+          curl -sS --fail-with-body "$SERVER/github/harness" -o "$RUNNER_TEMP/harness.json"
+          node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: context-draft
+          path: .asdlc
+
+      - name: Secret scan and profile dry run
+        run: |
+          mkdir -p "$RUNNER_TEMP/verify"
+          OUT="$RUNNER_TEMP/verify" node .asdlc-harness/harness/run.mjs context-verify
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-verify
+          path: |
+            ${{ runner.temp }}/verify/verify.json
+            ${{ runner.temp }}/verify/app.log
+          retention-days: 14
+
+  report:
+    name: report
+    needs: [agent, verify]
+    if: always() && needs.agent.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.agent.outputs.start_sha }}
+          persist-credentials: false
+
+      - name: Fetch trusted harness
+        run: |
+          set -euo pipefail
+          curl -sS --fail-with-body "$SERVER/github/harness" -o "$RUNNER_TEMP/harness.json"
+          node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: context-draft
+          path: ${{ runner.temp }}/pack
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: context-verify
+          path: ${{ runner.temp }}/verify
+
+      - name: Report to ASDLC
+        run: |
+          PACK_DIR="$RUNNER_TEMP/pack" VERIFY_FILE="$RUNNER_TEMP/verify/verify.json" \
+            node .asdlc-harness/harness/run.mjs context-report
