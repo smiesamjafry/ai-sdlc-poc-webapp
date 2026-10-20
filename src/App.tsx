@@ -16,6 +16,7 @@ import { DashboardPage } from "./admin/Dashboard";
 import { ProductEditPage, ProductsAdminPage } from "./admin/Products";
 import { CategoriesPage, CustomersPage, InventoryPage, OrderAdminPage, OrdersPage, OutboxPage } from "./admin/Operations";
 import { PromotionsPage, SettingsPage, SystemPage } from "./admin/Settings";
+import { QuestionsPage } from "./admin/Questions";
 
 function Header() {
   const { user, cart, logout } = useStore();
@@ -82,6 +83,7 @@ export function App() {
               <Route path="promotions" element={<PromotionsPage />} />
               <Route path="customers" element={<CustomersPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="questions" element={<QuestionsPage />} />
               <Route path="outbox" element={<OutboxPage />} />
               <Route path="system" element={<SystemPage />} />
             </Route>

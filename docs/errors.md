@@ -37,6 +37,7 @@ Every API error is `application/problem+json`:
 | <a id="already_cancelled"></a>`ALREADY_CANCELLED` | 409 | Order already cancelled | None |
 | <a id="refund_exceeds_quantity"></a>`REFUND_EXCEEDS_QUANTITY` | 409 | Refund more units than remain | Lower the quantity |
 | <a id="nothing_to_refund"></a>`NOTHING_TO_REFUND` | 409 | Order fully refunded | None |
+| <a id="question_already_answered"></a>`QUESTION_ALREADY_ANSWERED` | 409 | Product question already has its answer | Reload the questions list |
 | <a id="stock_negative"></a>`STOCK_NEGATIVE` | 409 | Adjustment would make stock negative | Use a smaller decrease |
 | <a id="category_in_use"></a>`CATEGORY_IN_USE` | 409 | Category still has products or children | Move them first |
 | <a id="internal"></a>`INTERNAL` | 500 | Unexpected failure (logged with the request id) | Retry once, then report the request id |

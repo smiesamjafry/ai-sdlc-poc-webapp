@@ -20,6 +20,8 @@ API=http://localhost:4000/api/v1
 |---|---|---|
 | GET | `/products` | Query: `category, size, colour, minPrice, maxPrice, inStock=true, onSale=true, featured=true, sort=newest\|price_asc\|price_desc\|best_selling, q, page, pageSize≤48`. Unknown params → 422 |
 | GET | `/products/:slug` | Content is cached; `variants[].stock` is always live |
+| GET | `/products/:slug/questions` | Answered questions, newest first (read live, not cached) |
+| POST | `/products/:slug/questions` | `{ question }` (1-500 chars after trimming); no sign-in needed. Shown publicly once answered |
 | GET | `/categories` | Category tree with product counts |
 | GET | `/home` | Featured categories, featured, new arrivals, on sale |
 | GET | `/store` | Store name, shipping and tax settings |
@@ -83,6 +85,8 @@ curl -XPOST $API/checkout -H 'content-type: application/json' -H "X-Cart-Token: 
 | GET | `/admin/customers`, `/admin/customers/:id` | With order count and lifetime value |
 | POST ★ | `/admin/customers/:id/disable`, `/enable` | Disabling revokes sessions |
 | GET; PUT ★ | `/admin/settings` | `{ storeName, taxRateBps, flatShippingCents, freeShippingThresholdCents, lowStockThreshold }` |
+| GET ★ | `/admin/questions` | Unanswered product questions, oldest first, with product name |
+| POST ★ | `/admin/questions/:id/answer` | `{ answer }`; one answer per question (`QUESTION_ALREADY_ANSWERED` otherwise) |
 | GET | `/admin/outbox` | Emails the store would have sent |
 | GET | `/admin/system` | Health + cache stats, keys by prefix, recent invalidations |
 | POST ★ | `/admin/cache/flush` | `{ "confirm": "FLUSH" }` |

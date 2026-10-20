@@ -31,3 +31,5 @@ export interface OrderDetail {
   refunds: { amountCents: number; reason: string | null; createdAt: string }[];
   totals: Totals & { refundedCents: number };
 }
+export interface ProductQuestion { id: string; question: string; answer: string; answeredAt: string }
+export interface AdminQuestion { id: string; question: string; createdAt: string; productName: string; productSlug: string }
