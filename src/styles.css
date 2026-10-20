@@ -176,6 +176,10 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .notice.error .link { margin-left: 8px; }
 .field-error { color: #a1260d; font-size: 0.85rem; font-weight: 400; }
 .pdp { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: start; }
+.qa { grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 16px; }
+.qa .field { max-width: 560px; }
+.qa-list li { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.qa-list p { margin: 4px 0; }
 .gallery img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); }
 .options { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 .options legend { font-weight: 500; margin-bottom: 6px; }

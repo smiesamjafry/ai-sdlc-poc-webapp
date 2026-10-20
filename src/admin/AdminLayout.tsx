@@ -6,7 +6,7 @@ import { Loading } from "../components/ui";
 const LINKS: Array<[string, string, boolean]> = [
   ["", "Dashboard", false], ["products", "Products", false], ["categories", "Categories", false], ["inventory", "Inventory", false],
   ["orders", "Orders", false], ["promotions", "Promotions", true], ["customers", "Customers", false], ["settings", "Settings", true],
-  ["outbox", "Outbox", false], ["system", "System & cache", false],
+  ["questions", "Questions", true], ["outbox", "Outbox", false], ["system", "System & cache", false],
 ];
 
 export function AdminLayout() {

@@ -5,6 +5,7 @@ import type { Cache } from "../cache/redis";
 import { cached, hashQuery } from "../cache/catalogCache";
 import { TTL } from "../cache/config";
 import { E } from "../lib/errors";
+import { uuid } from "../lib/ids";
 import { ah, parse } from "../middleware/common";
 
 const SORTS = ["newest", "price_asc", "price_desc", "best_selling"] as const;
@@ -25,6 +26,12 @@ export const listQuery = z.object({
   pageSize: z.coerce.number().int().min(1).max(48).default(24),
   nocache: z.string().optional(),
 }).strict();
+
+export const questionSchema = z.object({
+  question: z.string().trim().min(1, "Type a question").max(500, "Keep it under 500 characters"),
+}).strict();
+
+const slugParam = z.string().max(96).regex(/^[a-z0-9-]+$/);
 
 const escLike = (s: string) => s.replace(/[\\%_]/g, (c) => "\\" + c);
 
@@ -118,7 +125,7 @@ export function catalogRouter(db: Db, cache: Cache) {
   }));
 
   r.get("/products/:slug", ah(async (req, res) => {
-    const slug = parse(z.string().max(96).regex(/^[a-z0-9-]+$/), req.params.slug);
+    const slug = parse(slugParam, req.params.slug);
     const { value, status, key } = await cached(cache, db,
       { kind: "product", id: slug, ttl: TTL.product, bypass: req.query.nocache !== undefined },
       () => loadProduct(db, slug));
@@ -136,6 +143,26 @@ export function catalogRouter(db: Db, cache: Cache) {
         return { ...v, stock: n, inStock: n > 0, lowStock: n > 0 && n <= (s?.threshold ?? 5) };
       }),
     });
+  }));
+
+  // Q&A is read live (not cached): answers must appear as soon as an admin saves them.
+  r.get("/products/:slug/questions", ah(async (req, res) => {
+    const slug = parse(slugParam, req.params.slug);
+    const { rows } = await db.query(
+      `SELECT q.id, q.question, q.answer, q.answered_at AS "answeredAt"
+       FROM product_questions q JOIN products p ON p.id = q.product_id
+       WHERE p.slug = $1 AND q.answer IS NOT NULL ORDER BY q.answered_at DESC LIMIT 100`, [slug]);
+    res.json({ items: rows });
+  }));
+
+  r.post("/products/:slug/questions", ah(async (req, res) => {
+    const slug = parse(slugParam, req.params.slug);
+    const b = parse(questionSchema, req.body ?? {});
+    const p = (await db.query("SELECT id FROM products WHERE slug = $1 AND status = 'active' AND deleted_at IS NULL", [slug])).rows[0];
+    if (!p) throw E.notFound("Product");
+    const id = uuid();
+    await db.query("INSERT INTO product_questions (id, product_id, question) VALUES ($1,$2,$3)", [id, p.id, b.question]);
+    res.status(201).json({ id });
   }));
 
   r.get("/home", ah(async (req, res) => {

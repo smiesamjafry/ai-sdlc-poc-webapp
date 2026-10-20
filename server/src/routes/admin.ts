@@ -579,6 +579,32 @@ export function adminRouter(db: Db, cache: Cache, cfg: Config, auth: AuthService
     res.json({ items: rows });
   }));
 
+  // ---------- product questions ----------
+  r.get("/questions", admin, ah(async (_req, res) => {
+    const { rows } = await db.query(
+      `SELECT q.id, q.question, q.created_at AS "createdAt", p.name AS "productName", p.slug AS "productSlug"
+       FROM product_questions q JOIN products p ON p.id = q.product_id
+       WHERE q.answer IS NULL ORDER BY q.created_at LIMIT 200`);
+    res.json({ items: rows });
+  }));
+
+  r.post("/questions/:id/answer", admin, ah(async (req, res) => {
+    const id = parse(z.string().uuid(), req.params.id);
+    const b = parse(z.object({ answer: z.string().trim().min(1, "Type an answer").max(2000) }), req.body);
+    await mutate(db, req, async (tx) => {
+      const u = await tx.query(
+        "UPDATE product_questions SET answer = $2, answered_by = $3, answered_at = now() WHERE id = $1 AND answer IS NULL",
+        [id, b.answer, req.user!.id]);
+      if (!u.rowCount) {
+        const exists = await tx.query("SELECT 1 FROM product_questions WHERE id = $1", [id]);
+        if (!exists.rowCount) throw E.notFound("Question");
+        throw E.conflict("QUESTION_ALREADY_ANSWERED", "This question already has an answer", "Reload the list; each question takes one answer.");
+      }
+      await audit(tx, req, "question.answer", "product_question", id);
+    });
+    res.json({ id, answered: true });
+  }));
+
   // ---------- system / cache ----------
   r.get("/system", staff, ah(async (_req, res) => {
     const [health, stats] = await Promise.all([healthReport(db, cache, cfg), cacheStats(cache)]);

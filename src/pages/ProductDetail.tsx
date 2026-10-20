@@ -5,6 +5,7 @@ import { IS_PREVIEW } from "../lib/env";
 import { useApi, useStore } from "../lib/store";
 import type { Product } from "../lib/types";
 import { ErrorNote, Loading, Price, imgSrc } from "../components/ui";
+import { ProductQuestions } from "./ProductQuestions";
 
 export function ProductDetailPage() {
   const { slug } = useParams();
@@ -79,6 +80,7 @@ export function ProductDetailPage() {
         )}
         {msg && <p role={msg.ok ? "status" : "alert"}>{msg.text} {msg.ok && <Link to="/cart">View cart</Link>}</p>}
       </div>
+      <ProductQuestions slug={p.slug} />
     </section>
   );
 }
