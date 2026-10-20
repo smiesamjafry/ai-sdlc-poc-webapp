@@ -73,13 +73,13 @@ Public catalog: `GET /products`, `/products/:slug`, `/categories`, `/home`, `/st
 Asked in Slack when ASDLC first read this repo. Edit freely.
 
 1. Who are the real stakeholders for this store: is it purely a demo for the ASDLC proof of concept, or could it become a real shop?
-   - *unknown, please fill in*
+   - its a demo app (<@U0C9LR2QSEQ> in Slack)
 2. Which flows matter most when a request changes behaviour: guest checkout, admin catalog and inventory, promotions, or order fulfilment and refunds?
-   - *unknown, please fill in*
+   - all (<@U0C9LR2QSEQ> in Slack)
 3. Are there areas agents must not touch beyond those in CLAUDE.md (for example pricing rules, payment mocking, auth, migrations already deployed)?
-   - *unknown, please fill in*
+   - Anything can be touched. (<@U0C9LR2QSEQ> in Slack)
 4. Which items in TODOS.md are planned next (real payment provider, OpenAPI, live order feed, wishlist), and which are off limits for now?
-   - *unknown, please fill in*
+   - not sure atm, will keep sharing later (<@U0C9LR2QSEQ> in Slack)
 5. Should guest checkout, tax (one flat rate) and shipping (flat rate with free threshold) stay as they are, or are there regional rules coming?
-   - *unknown, please fill in*
+   - stay as it is. (<@U0C9LR2QSEQ> in Slack)
 <!-- /asdlc:questions -->
