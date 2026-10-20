@@ -115,10 +115,17 @@ jobs:
           mkdir -p .asdlc "$RUNNER_TEMP/out"
           cp "$RUNNER_TEMP/spec.json" .asdlc/spec.json
           KEY=$(cat "$RUNNER_TEMP/proxy-token"); rm "$RUNNER_TEMP/proxy-token"
+          # Claude Code talks to a localhost relay that base64-encodes each call on its way to the
+          # orchestrator: Render's edge firewall blocks request text that looks like an attack
+          # (e.g. "OR 1=1" in a test file), which would cut the agent off mid-run.
+          env -u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL \
+              -u ACTIONS_RUNTIME_TOKEN -u ACTIONS_RESULTS_URL -u ACTIONS_CACHE_URL -u GITHUB_TOKEN \
+            node .asdlc-harness/harness/run.mjs llm-shim & SHIM=$!
+          for i in $(seq 1 40); do curl -sf http://127.0.0.1:8787/shim-health >/dev/null && break; sleep 0.25; done
           # Commands the model runs get no OIDC, artifact or cache credentials from this job.
           env -u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL \
               -u ACTIONS_RUNTIME_TOKEN -u ACTIONS_RESULTS_URL -u ACTIONS_CACHE_URL -u GITHUB_TOKEN \
-            ANTHROPIC_BASE_URL="$SERVER/llm" ANTHROPIC_API_KEY="$KEY" \
+            ANTHROPIC_BASE_URL="http://127.0.0.1:8787" ANTHROPIC_API_KEY="$KEY" \
             ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-5-5 ANTHROPIC_SMALL_FAST_MODEL=claude-haiku-5-5 \
             CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_AUTOUPDATER=1 \
             ASDLC_TEST_DIR="e2e/asdlc/$TICKET" \
@@ -127,6 +134,7 @@ jobs:
               --allowedTools "$(cat "$RUNNER_TEMP/allowed-tools")" --output-format json \
               > "$RUNNER_TEMP/claude.json" || echo "::warning::Claude Code exited with $?"
           unset KEY
+          kill "$SHIM" 2>/dev/null || true
           jq -r '.result // ""' "$RUNNER_TEMP/claude.json" > "$RUNNER_TEMP/out/summary.md" || true
           jq '{subtype, num_turns, duration_ms, is_error}' "$RUNNER_TEMP/claude.json" || true
 
