@@ -108,6 +108,9 @@ jobs:
         with:
           name: context-draft
           path: .asdlc/
+          # .asdlc/ starts with a dot; upload-artifact skips hidden folders unless told otherwise.
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 14
 
   verify:
