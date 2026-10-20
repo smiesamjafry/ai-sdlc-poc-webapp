@@ -34,11 +34,9 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://pocket-shop.onrender.com
-      - key: PREVIEW_ORIGINS
-        value: https://smiesamjafry.github.io
+        value: https://pocket-shop-41pq.onrender.com
       - key: STOREFRONT_URL
-        value: https://pocket-shop.onrender.com
+        value: https://pocket-shop-41pq.onrender.com
       - key: SEED_ADMIN_PASSWORD
         sync: false
       - key: SEED_STAFF_PASSWORD
@@ -55,7 +53,7 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: VITE_API_URL
-        value: https://pocket-shop-api.onrender.com
+        value: https://pocket-shop-api-c15t.onrender.com
 
   - type: keyvalue
     name: pocket-shop-cache
