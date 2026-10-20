@@ -1,4 +1,4 @@
-<!-- asdlc-context: describes 5295b5a554b1d8be635a691ed2d92eb330688323 (written 2026-10-20). Edit freely; ASDLC refreshes changed sections after merges. -->
+<!-- asdlc-context: describes 055e8c3b9df91bda9c92217c095d006f53924d95 (written 2026-10-20). Edit freely; ASDLC refreshes changed sections after merges. -->
 
 # Pocket Shop: context for coding agents
 
@@ -14,22 +14,22 @@ Demo e-commerce store: React SPA (storefront + admin), Express API, Postgres (tr
 - Deploy: Render (`render.yaml`): API web service, static site, Postgres, Key Value. GitHub Pages for browse-only PR previews (`.github/workflows/preview.yml`, `pages.yml`).
 
 ## Folder map
-- `src/` SPA: `App.tsx` (routes, header), `main.tsx`, `pages/` (Home, Products, ProductDetail, Cart, Checkout, Order, Auth, Account), `admin/` (AdminLayout, Dashboard, Products, Operations, Settings), `components/ui.tsx` (Price, Loading, ErrorNote, Empty), `lib/api.ts` (fetch, token refresh, `ApiProblem`), `lib/store.tsx` (session + cart context), `lib/env.ts`, `lib/types.ts`, `styles.css`.
+- `src/` SPA: `App.tsx` (routes, header), `main.tsx`, `pages/` (Home, Products, ProductDetail, ProductQuestions, Cart, Checkout, Order, Auth, Account), `admin/` (AdminLayout, Dashboard, Products, Operations, Settings, Questions), `components/ui.tsx` (Price, Loading, ErrorNote, Empty), `lib/api.ts` (fetch, token refresh, `ApiProblem`), `lib/store.tsx` (session + cart context), `lib/env.ts`, `lib/types.ts`, `styles.css`.
 - `server/src/`: `index.ts` / `start.ts` (start; `start.ts` migrates, seeds empty DB, then serves), `app.ts` (middleware + routers), `routes/` (`catalog.ts`, `shop.ts`, `admin.ts`, `health.ts`), `services/` (`auth`, `cart`, `checkout`, `payments`, `promotions`), `cache/` (`redis.ts`, `catalogCache.ts`, `config.ts`), `db/` (`pool.ts`, `migrate.ts`), `seed/` (`catalog.ts`, `seed.ts`, `reset.ts`, `cli.ts`), `middleware/` (`common.ts`, `rateLimit.ts`), `lib/` (`config.ts`, `errors.ts`, `ids.ts`, `log.ts`).
-- `server/migrations/0001_init.sql` schema. `server/test/*.test.ts` API tests.
+- `server/migrations/0001_init.sql` and `0002_product_questions.sql` schema. `server/test/*.test.ts` API tests.
 - `shared/src/`: `money.ts` (`formatPrice`, `roundHalfUp`), `pricing.ts` (`priceCart`), `index.ts`.
 - `e2e/` Playwright specs (`admin.spec.ts`, `storefront.spec.ts`, `reset.serial.spec.ts`, `helpers.ts`); `e2e/asdlc/` is reserved for ASDLC acceptance tests (ignored by `playwright.config.ts`).
 - `scripts/` (`setup.mjs`, `dev.mjs`, `e2e-api.mjs`), `docs/` (`api.md`, `errors.md`, `demo-runbook.md`, `specs/ecommerce-store-prd.md`), `public/` product SVGs, `TODOS.md` deferred work.
 
 ## Request flow
 Browser → `src/lib/api.ts` (Bearer access token, `X-Cart-Token` for guests, refresh on `TOKEN_EXPIRED`) → API `server/src/app.ts`: requestId+log → CORS → JSON body (200kb) → optional bearer auth (`AuthService.middleware()`) → `/api/v1` routers (catalog, shop, admin) → `notFound` → `errorHandler` (problem+json). `/healthz` and `/` sit outside `/api/v1`.
-- Catalog reads: `cached()` in `server/src/cache/catalogCache.ts`; key embeds `app_meta.catalog_version`; response has `X-Cache`. Stock is read live.
+- Catalog reads: `cached()` in `server/src/cache/catalogCache.ts`; key embeds `app_meta.catalog_version`; response has `X-Cache`. Stock is read live. Product Q&A (`routes/catalog.ts`, `/products/:slug/questions`) is read live, not cached.
 - Checkout: `server/src/services/checkout.ts` (idempotency key, stock lock, `priceCart`, `payments.ts` mock charge, order + events + outbox in one transaction).
 - Admin: `mutate()` in `server/src/routes/admin.ts` wraps a transaction + `fenceEpoch` (reset fence); `audit()` writes `audit_log`. Role guards: `staff` (staff/admin) vs `admin`.
 - Money totals: `shared/src/pricing.ts` `priceCart()`, called by `server/src/services/cart.ts` and checkout.
 
 ## Data
-- Postgres schema: `server/migrations/0001_init.sql` (tables: app_meta, users, refresh_tokens, addresses, categories, products, product_images, variants, inventory_movements, store_settings, promotions, carts, cart_items, idempotency_keys, orders, order_items, order_events, payment_attempts, refunds, promotion_redemptions, order_access_tokens, email_outbox, audit_log). Applied by `server/src/db/migrate.ts`. Forward-only, additive; next file is `0002_<name>.sql`.
+- Postgres schema: `server/migrations/0001_init.sql` (tables: app_meta, users, refresh_tokens, addresses, categories, products, product_images, variants, inventory_movements, store_settings, promotions, carts, cart_items, idempotency_keys, orders, order_items, order_events, payment_attempts, refunds, promotion_redemptions, order_access_tokens, email_outbox, audit_log) and `0002_product_questions.sql` (product_questions). Applied by `server/src/db/migrate.ts`. Forward-only, additive; next file is `0003_<name>.sql`.
 - Seed: `server/src/seed/catalog.ts` (apparel catalog), `seed.ts`, `reset.ts` (same code as admin "Reset demo data"), CLI `server/src/seed/cli.ts`. `SEED_SCALE=small` for tests, `full` otherwise.
 - Redis (`server/src/cache/redis.ts`): catalog cache, dashboard cache (`TTL` in `cache/config.ts`), rate limits, cache counters. Fail-fast wrapper `cache.run()` returns `null` when down.
 - Client storage: refresh tokens (customers in localStorage, staff/admin in sessionStorage) and cart token in localStorage (`src/lib/api.ts`).

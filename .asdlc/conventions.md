@@ -1,4 +1,4 @@
-<!-- asdlc-context: describes 5295b5a554b1d8be635a691ed2d92eb330688323 (written 2026-10-20). Edit freely; ASDLC refreshes changed sections after merges. -->
+<!-- asdlc-context: describes 055e8c3b9df91bda9c92217c095d006f53924d95 (written 2026-10-20). Edit freely; ASDLC refreshes changed sections after merges. -->
 
 # Conventions
 
@@ -44,7 +44,7 @@ Enforced by `CLAUDE.md` (human-reviewed) and `tsc --strict` (`tsconfig.json`, `s
 
 ## Tests
 - Keep logic pure and testable: pure function beside a `*.test.ts` (`shared/src/pricing.test.ts`, `src/lib/env.test.ts`). Unit tests run with Vitest, jsdom, globals on (no import of `describe/it`).
-- API behaviour: `server/test/<area>.test.ts` with supertest against real Postgres + Redis via `setup()` from `server/test/helpers.ts` (`checkout.test.ts`, `admin.test.ts`, `auth.test.ts`, `catalog.test.ts`, `platform.test.ts`).
+- API behaviour: `server/test/<area>.test.ts` with supertest against real Postgres + Redis via `setup()` from `server/test/helpers.ts` (`checkout.test.ts`, `admin.test.ts`, `auth.test.ts`, `catalog.test.ts`, `platform.test.ts`, `questions.test.ts`).
 - E2E: `e2e/*.spec.ts` with Playwright, `await page.goto("./#/...")` (hash routes), role/label locators, shared helpers in `e2e/helpers.ts`. Tests that reset data are named `*.serial.spec.ts`. ASDLC acceptance tests go in `e2e/asdlc/`.
 - Test titles are plain sentences describing behaviour (`"searching by name shows only matches, each with its image"`). Use `it.each` tables for rule matrices.
 - Fixture logins: `admin@shop.test`, `staff@shop.test`, `demo@shop.test`, password `demo1234`. Test cards: `4242 4242 4242 4242` OK, `4000 0000 0000 0002` declined, `4000 0000 0000 9995` insufficient funds.
