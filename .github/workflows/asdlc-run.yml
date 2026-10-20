@@ -1,14 +1,19 @@
-# ASDLC agent run (tests, build, fix). Started only by the ASDLC orchestrator (GitHub App) via
-# workflow_dispatch. The orchestrator decides the stage, model, tools and prompt; this file only
-# decides what each job is allowed to touch.
+# ASDLC agent run (tests, build, fix). Copy to .github/workflows/asdlc-run.yml in the target
+# repo, on its default branch. Started only by the ASDLC orchestrator (GitHub App) via
+# workflow_dispatch. The orchestrator decides the stage, model, tools, prompt and the project
+# profile (.asdlc/profile.yml, pinned per ticket); this file only decides what each job may touch.
+# Nothing in it is project-specific: setup, services, app start and checks come from the profile.
 #
-#   agent   claims the execution with OIDC, then Claude Code edits a checkout of the start commit.
-#           Read-only repo access; Anthropic only through the ASDLC metering proxy with a per-run
-#           token. Output: a patch, never a push.
+#   agent   claims the execution with OIDC, runs the profile's setup, starts its services, then
+#           Claude Code edits a checkout of the start commit. Read-only repo access; Anthropic
+#           only through the ASDLC metering proxy with a per-run token. Output: a patch.
 #   check   no credentials of any kind. Applies the patch to a fresh checkout, enforces the path
-#           rules and runs the acceptance tests (+ unit tests and typecheck for build/fix).
+#           rules, starts services and the app, runs the acceptance tests and the profile's checks.
 #   report  OIDC only, runs no agent code: reads the changed files from the patch and posts them
 #           with the check results. The orchestrator commits to ai/<ticket> and opens the PR.
+#
+# Every profile command runs with OIDC, GitHub and Anthropic variables removed from its
+# environment (harness/run.mjs). Runner toolchains (Node, Python, Go, Java, Docker) are assumed.
 name: asdlc-run
 run-name: "asdlc ${{ inputs.ticket }} ${{ inputs.execution }}"
 
@@ -30,7 +35,8 @@ env:
   TICKET: ${{ inputs.ticket }}
   SERVER: ${{ inputs.server }}
   CLAUDE_CODE_VERSION: 2.1.286
-  # Writes the orchestrator's harness ({ref, files: {path: text}}) under .asdlc-harness/.
+  # Writes the orchestrator's harness ({ref, files: {path: text}, profile}) under .asdlc-harness/
+  # and the profile to the file named by the second argument.
   WRITE_HARNESS: |
     const fs = require("fs"), path = require("path");
     const h = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
@@ -40,7 +46,8 @@ env:
       fs.mkdirSync(path.dirname(out), { recursive: true });
       fs.writeFileSync(out, text);
     }
-    console.log("harness", h.ref, Object.keys(h.files).join(", "));
+    if (process.argv[2] && h.profile) fs.writeFileSync(process.argv[2], JSON.stringify(h.profile));
+    console.log("harness", h.ref, Object.keys(h.files).join(", "), h.profile ? "profile " + h.profile.hash : "no profile");
 
 jobs:
   agent:
@@ -56,6 +63,7 @@ jobs:
     steps:
       - name: Validate inputs
         run: |
+          echo "ASDLC_PROFILE=$RUNNER_TEMP/profile.json" >> "$GITHUB_ENV"
           [[ "$EXECUTION" =~ ^E-[0-9a-f-]{36}$ ]] || { echo "bad execution id"; exit 1; }
           [[ "$TICKET" =~ ^T-[0-9]+$ ]] || { echo "bad ticket id"; exit 1; }
           [[ "$SERVER" =~ ^https:// ]] || { echo "server must be https"; exit 1; }
@@ -72,7 +80,7 @@ jobs:
           echo "::add-mask::$TOKEN"
           printf '%s' "$TOKEN" > "$RUNNER_TEMP/proxy-token"
           jq .spec "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/spec.json"
-          jq .harness "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/harness.json"
+          jq '.harness + {profile: .profile}' "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/harness.json"
           jq -r .agent.prompt "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/prompt.md"
           jq -r '.agent.model' "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/model"
           jq -r '.agent.maxTurns' "$RUNNER_TEMP/claim.json" > "$RUNNER_TEMP/max-turns"
@@ -87,15 +95,19 @@ jobs:
           persist-credentials: false
 
       - name: Install harness
-        run: node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json"
+        run: node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json" "$ASDLC_PROFILE"
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - name: Project setup (from the profile)
+        run: |
+          node .asdlc-harness/harness/run.mjs setup
+          node .asdlc-harness/harness/run.mjs export-env >> "$GITHUB_ENV"
+
+      - name: Start services and prepare data (from the profile)
+        run: node .asdlc-harness/harness/run.mjs up
 
       - name: Run Claude Code
         run: |
@@ -118,9 +130,13 @@ jobs:
           jq -r '.result // ""' "$RUNNER_TEMP/claude.json" > "$RUNNER_TEMP/out/summary.md" || true
           jq '{subtype, num_turns, duration_ms, is_error}' "$RUNNER_TEMP/claude.json" || true
 
+      - name: Stop services
+        if: always()
+        run: node .asdlc-harness/harness/run.mjs down || true
+
       - name: Package changes as a patch
         run: |
-          printf '.asdlc/\n.asdlc-harness/\ntest-results/\nplaywright-report/\n' >> .git/info/exclude
+          printf '.asdlc/\n.asdlc-harness/\nnode_modules/\ntest-results/\nplaywright-report/\n' >> .git/info/exclude
           git add -A
           git diff --cached --binary HEAD > "$RUNNER_TEMP/out/changes.patch"
           git diff --cached --stat HEAD
@@ -135,7 +151,7 @@ jobs:
     name: check
     needs: agent
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     permissions:
       contents: read
     env:
@@ -146,19 +162,22 @@ jobs:
           ref: ${{ needs.agent.outputs.start_sha }}
           persist-credentials: false
 
-      - name: Fetch trusted harness
+      - name: Fetch trusted harness and the ticket's profile
         run: |
           set -euo pipefail
-          curl -sS --fail-with-body "$SERVER/github/harness" -o "$RUNNER_TEMP/harness.json"
-          node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json"
+          echo "ASDLC_PROFILE=$RUNNER_TEMP/profile.json" >> "$GITHUB_ENV"
+          export ASDLC_PROFILE="$RUNNER_TEMP/profile.json"
+          curl -sS --fail-with-body "$SERVER/github/harness?execution=$EXECUTION" -o "$RUNNER_TEMP/harness.json"
+          node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json" "$ASDLC_PROFILE"
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - name: Project setup (from the profile)
+        run: |
+          node .asdlc-harness/harness/run.mjs setup
+          node .asdlc-harness/harness/run.mjs export-env >> "$GITHUB_ENV"
 
       - uses: actions/download-artifact@v4
         with:
@@ -175,7 +194,9 @@ jobs:
         if: always()
         with:
           name: check-output
-          path: ${{ runner.temp }}/check/check.json
+          path: |
+            ${{ runner.temp }}/check/check.json
+            ${{ runner.temp }}/check/app.log
           retention-days: 14
 
   report:
@@ -195,11 +216,13 @@ jobs:
           ref: ${{ needs.agent.outputs.start_sha }}
           persist-credentials: false
 
-      - name: Fetch trusted harness
+      - name: Fetch trusted harness and the ticket's profile
         run: |
           set -euo pipefail
-          curl -sS --fail-with-body "$SERVER/github/harness" -o "$RUNNER_TEMP/harness.json"
-          node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json"
+          echo "ASDLC_PROFILE=$RUNNER_TEMP/profile.json" >> "$GITHUB_ENV"
+          export ASDLC_PROFILE="$RUNNER_TEMP/profile.json"
+          curl -sS --fail-with-body "$SERVER/github/harness?execution=$EXECUTION" -o "$RUNNER_TEMP/harness.json"
+          node -e "$WRITE_HARNESS" "$RUNNER_TEMP/harness.json" "$ASDLC_PROFILE"
 
       - uses: actions/download-artifact@v4
         with:
