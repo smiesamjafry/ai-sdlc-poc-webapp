@@ -22,7 +22,7 @@ function Header() {
   const { user, cart, logout } = useStore();
   return (
     <header className="topbar">
-      <Link to="/" className="brand">Pocket Shop</Link>
+      <Link to="/" className="brand">My Pocket Shop</Link>
       <nav>
         <NavLink to="/products">Shop</NavLink>
         {!IS_PREVIEW && <NavLink to="/cart">Cart ({cart?.itemCount ?? 0})</NavLink>}
@@ -91,7 +91,7 @@ export function App() {
           </Routes>
         </main>
         <CacheBadge />
-        <footer className="footer"><span className="muted small">Pocket Shop demo store · test payments only</span></footer>
+        <footer className="footer"><span className="muted small">My Pocket Shop demo store · test payments only</span></footer>
       </StoreProvider>
     </HashRouter>
   );
