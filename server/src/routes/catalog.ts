@@ -31,6 +31,10 @@ export const questionSchema = z.object({
   question: z.string().trim().min(1, "Type a question").max(500, "Keep it under 500 characters"),
 }).strict();
 
+export const ratingSchema = z.object({
+  stars: z.number().int("Choose a whole number of stars").min(1, "Choose 1 to 5 stars").max(5, "Choose 1 to 5 stars"),
+}).strict();
+
 const slugParam = z.string().max(96).regex(/^[a-z0-9-]+$/);
 
 const escLike = (s: string) => s.replace(/[\\%_]/g, (c) => "\\" + c);
@@ -163,6 +167,31 @@ export function catalogRouter(db: Db, cache: Cache) {
     const id = uuid();
     await db.query("INSERT INTO product_questions (id, product_id, question) VALUES ($1,$2,$3)", [id, p.id, b.question]);
     res.status(201).json({ id });
+  }));
+
+  // Ratings are read live (not cached) so a new rating shows up straight away.
+  async function ratingSummary(productId: string) {
+    const { rows } = await db.query(
+      `SELECT count(*)::int AS count, round(avg(stars), 1)::float AS average FROM product_ratings WHERE product_id = $1`, [productId]);
+    return { average: rows[0].average as number | null, count: rows[0].count as number };
+  }
+  async function activeProductId(slug: string) {
+    const p = (await db.query("SELECT id FROM products WHERE slug = $1 AND status = 'active' AND deleted_at IS NULL", [slug])).rows[0];
+    if (!p) throw E.notFound("Product");
+    return p.id as string;
+  }
+
+  r.get("/products/:slug/ratings", ah(async (req, res) => {
+    const slug = parse(slugParam, req.params.slug);
+    res.json(await ratingSummary(await activeProductId(slug)));
+  }));
+
+  r.post("/products/:slug/ratings", ah(async (req, res) => {
+    const slug = parse(slugParam, req.params.slug);
+    const b = parse(ratingSchema, req.body ?? {});
+    const productId = await activeProductId(slug);
+    await db.query("INSERT INTO product_ratings (id, product_id, stars) VALUES ($1,$2,$3)", [uuid(), productId, b.stars]);
+    res.status(201).json(await ratingSummary(productId));
   }));
 
   r.get("/home", ah(async (req, res) => {

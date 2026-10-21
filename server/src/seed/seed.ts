@@ -27,7 +27,7 @@ function prng(seed: number) {
 
 /** Tables a demo reset truncates. Never app_meta or schema_migrations. */
 export const RESET_TABLES = [
-  "audit_log", "product_questions", "email_outbox", "order_access_tokens", "promotion_redemptions", "refunds", "payment_attempts",
+  "audit_log", "product_questions", "product_ratings", "email_outbox", "order_access_tokens", "promotion_redemptions", "refunds", "payment_attempts",
   "order_events", "order_items", "orders", "idempotency_keys", "cart_items", "carts", "promotions",
   "store_settings", "inventory_movements", "variants", "product_images", "products", "categories",
   "addresses", "refresh_tokens", "users",

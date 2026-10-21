@@ -6,6 +6,7 @@ import { useApi, useStore } from "../lib/store";
 import type { Product } from "../lib/types";
 import { ErrorNote, Loading, Price, imgSrc } from "../components/ui";
 import { ProductQuestions } from "./ProductQuestions";
+import { ProductRating } from "./ProductRating";
 
 export function ProductDetailPage() {
   const { slug } = useParams();
@@ -51,6 +52,7 @@ export function ProductDetailPage() {
       <div className="pdp-info">
         <p className="muted"><Link to={`/products?category=${p.category}`}>{p.categoryName}</Link></p>
         <h1>{p.name}</h1>
+        <ProductRating slug={p.slug} />
         <p><Price cents={chosen?.priceCents ?? p.variants[0].priceCents} compareAt={chosen?.compareAtCents ?? p.variants[0].compareAtCents} /></p>
         <p>{p.description}</p>
         {colours.length > 0 && (

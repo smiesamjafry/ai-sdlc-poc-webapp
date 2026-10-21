@@ -180,6 +180,13 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .qa .field { max-width: 560px; }
 .qa-list li { padding: 8px 0; border-bottom: 1px solid var(--border); }
 .qa-list p { margin: 4px 0; }
+.rating-summary { margin: -8px 0 8px; }
+.rating-summary span[aria-hidden] { color: #b7791f; }
+.stars { display: flex; gap: 4px; align-items: center; border: 0; padding: 0; margin: 8px 0; }
+.stars legend { font-weight: 500; margin-bottom: 6px; padding: 0; }
+.stars label { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; padding: 0 4px; cursor: pointer; color: var(--border-strong); font-size: 1.5rem; }
+.stars label.on { color: #b7791f; }
+.stars input { accent-color: var(--accent); margin: 0; }
 .gallery img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); }
 .options { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 .options legend { font-weight: 500; margin-bottom: 6px; }

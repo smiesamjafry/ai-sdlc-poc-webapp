@@ -22,6 +22,8 @@ API=http://localhost:4000/api/v1
 | GET | `/products/:slug` | Content is cached; `variants[].stock` is always live |
 | GET | `/products/:slug/questions` | Answered questions, newest first (read live, not cached) |
 | POST | `/products/:slug/questions` | `{ question }` (1-500 chars after trimming); no sign-in needed. Shown publicly once answered |
+| GET | `/products/:slug/ratings` | `{ average, count }`: average stars rounded to one decimal (`null` when unrated); read live, not cached |
+| POST | `/products/:slug/ratings` | `{ stars }` (whole number 1-5); no sign-in needed, every submission counts. Returns the new `{ average, count }` (201) |
 | GET | `/categories` | Category tree with product counts |
 | GET | `/home` | Featured categories, featured, new arrivals, on sale |
 | GET | `/store` | Store name, shipping and tax settings |
